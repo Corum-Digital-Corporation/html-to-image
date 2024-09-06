@@ -5,6 +5,7 @@ import { isDataUrl, makeDataUrl, resourceToDataURL } from './dataurl'
 
 const URL_REGEX = /url\((['"]?)([^'"]+?)\1\)/g
 const URL_WITH_FORMAT_REGEX = /url\([^)]+\)\s*format\((["']?)([^"']+)\1\)/g
+const URL_WITH_FORMAT_REGEX2 = /url\(([^)]+)\)\s*format\((["']?)([^"')]+)\2\)/;
 const FONT_SRC_REGEX = /src:\s*(?:url\([^)]+\)\s*format\([^)]+\)[,;]\s*)+/g
 
 function toRegex(url: string): RegExp {
@@ -57,6 +58,20 @@ function filterPreferredFontFormat(
     : str.replace(FONT_SRC_REGEX, (match: string) => {
         // eslint-disable-next-line no-constant-condition
         while (true) {
+
+          const match2 = URL_WITH_FORMAT_REGEX2.exec(match);
+
+          if (match2) {
+              const [ , url, , format] = match2;
+              //console.log(`URL: ${url}, Format: ${format}`);
+              const updateUrl = 'url(' + url + ')';
+
+              if (format === preferredFontFormat) {
+                //console.log("SRC Match: ", updateUrl);
+                return `src: ${updateUrl};`
+              }
+          }
+
           const [src, , format] = URL_WITH_FORMAT_REGEX.exec(match) || []
           if (!format) {
             return ''
